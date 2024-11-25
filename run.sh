@@ -114,7 +114,7 @@ else
                -it \
               --privileged \
 	      --runtime=nvidia \
-              -v /lib/modules/5.15.136-tegra:/lib/modules/5.15.136-tegra \
+              -v /lib/modules/5.15.148-tegra:/lib/modules/5.15.148-tegra \
               --network=host \
                "${image_name}" \
                ${start_command} 
