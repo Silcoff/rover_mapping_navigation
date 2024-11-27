@@ -2,7 +2,7 @@ FROM rover-image
 
 ARG ROS_DISTRO=humble
 
-#python3-catkin-tools python3-pip 
+#rtabmap 
 RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rtabmap-ros ros-${ROS_DISTRO}-rtabmap ros-${ROS_DISTRO}-grid-map 
 # Install ntpdate to sync time
 RUN apt-get install -y ntpdate
