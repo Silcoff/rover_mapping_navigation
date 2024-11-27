@@ -2,5 +2,10 @@ FROM rover-image
 
 ARG ROS_DISTRO=humble
 
-RUN apt-get update && apt-get install -y ros-$ROS_DISTRO-navigation2 ros-$ROS_DISTRO-nav2-bringup && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ros-$ROS_DISTRO-navigation2 ros-$ROS_DISTRO-nav2-bringup
+RUN apt-get install ros-humble-vector-pursuit-controller && rm -rf /var/lib/apt/lists/*
 
+COPY ./src ./src
+RUN . /opt/ros/${ROS_DISTRO}/setup.sh && colcon build --symlink-install
+# COPY nav2_params.yaml ./src/rover_nav2_bringup/params/nav2_params.yaml
+RUN echo "alias nav2='ros2 launch nav2_bringup navigation_launch.py slam:=true params_file:=src/rover_nav2/params/nav2_params.yaml'" >> /root/.bashrc
