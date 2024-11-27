@@ -1,0 +1,13 @@
+/steepness_map_occupancy_grid:
+  history: keep_last
+  depth: 5
+  durability: transient_local
+  # durability: volatile
+  reliability: reliable
+
+/map:
+  history: keep_last
+  depth: 5
+  durability: transient_local
+  # durability: volatile
+  reliability: reliable
