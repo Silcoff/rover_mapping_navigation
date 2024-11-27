@@ -1,0 +1,6 @@
+FROM rover-image
+
+ARG ROS_DISTRO=humble
+
+RUN apt-get update && apt-get install -y ros-$ROS_DISTRO-navigation2 ros-$ROS_DISTRO-nav2-bringup && rm -rf /var/lib/apt/lists/*
+
