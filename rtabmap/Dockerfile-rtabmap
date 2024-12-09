@@ -16,4 +16,28 @@ RUN pip3 install -r /requirements.txt
 # Synchronize time
 RUN ntpdate -q pool.ntp.org
 
-RUN echo "alias camera='ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i'" >> /root/.bashrc
+COPY src ./src
+RUN . /opt/ros/${ROS_DISTRO}/setup.sh && colcon build --symlink-install
+
+RUN echo "alias camera='ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i publish_tf:=false'" >> /root/.bashrc
+RUN echo "alias rtabmap='ros2 launch rtabmap_launch rtabmap.launch.py \
+    compressed:=true \
+    rtabmap_args:="--delete_db_on_start " \
+    rgb_topic:=/zed/zed_node/rgb/image_rect_color \
+    depth_topic:=/zed/zed_node/depth/depth_registered \
+    camera_info_topic:=/zed/zed_node/rgb/camera_info \
+    frame_id:=zed_camera_link \
+    approx_sync:=true \
+    wait_imu_to_init:=true \
+    imu_topic:=/zed/zed_node/imu/data \
+    qos:=1 \
+    topic_queue_size:=10 \
+    sync_queue_size:=10 \
+    rviz:=false'" >> /root/.bashrc
+RUN echo "alias steepness_mapping='ros2 run ros2_traversability_mapping steepness_mapping_node --ros-args -r steepness_map_occupancy_grid:=map -p smoothing_window_size:=5'" >> /root/.bashrc
+RUN echo "alias wheels='ros2 launch hardware ackermann.launch.py'" >> /root/.bashrc
+# publish_map_tf:=false enable_gnss:=false publish_urdf:=true publish_imu_tf:=false
+COPY entrypoint-camera.sh /root/orin/ros_ws/entrypoint-camera.sh
+RUN chmod +x /root/orin/ros_ws/entrypoint-camera.sh
+COPY entrypoint-rtabmap.sh /root/orin/ros_ws/entrypoint-rtabmap.sh
+RUN chmod +x /root/orin/ros_ws/entrypoint-rtabmap.sh
