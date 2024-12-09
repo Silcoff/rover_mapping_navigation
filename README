@@ -3,17 +3,72 @@ This is the reposatory for p7 project
 ### this is the launch command for the rtabmap. this should be run when the camera is running.
 ros2 launch rtabmap_launch rtabmap.launch.py \
     compressed:=true \
-    rtabmap_args:="--delete_db_on_start" \
+    rtabmap_args:="--delete_db_on_start " \
     rgb_topic:=/zed/zed_node/rgb/image_rect_color \
     depth_topic:=/zed/zed_node/depth/depth_registered \
     camera_info_topic:=/zed/zed_node/rgb/camera_info \
-    frame_id:=zed_left_camera_frame \
+    frame_id:=zed_camera_link \
     approx_sync:=true \
+    approx_sync_max_interval:=0.0 \
     wait_imu_to_init:=true \
     imu_topic:=/zed/zed_node/imu/data \
     qos:=1 \
     topic_queue_size:=100 \
-    sync_queue_size:=300 \
+    sync_queue_size:=100 \
     rviz:=false
 
+--Optimizer/GravitySigma 0.3 --Odom/Strategy 1 --Vis/CorType 1 --OdomF2M/MaxSize 1000 --Vis/MaxFeatures 600
 
+ros2 launch hardware ackermann.launch.py
+
+ros2 run ros2_traversability_mapping steepness_mapping_node --ros-args -r steepness_map_occupancy_grid:=map -p smoothing_window_size:=5
+
+ros2 launch nav2_bringup navigation_launch.py slam:=true params_file:=src/rover_nav2/params/nav2_params.yaml                                     
+
+ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i publish_tf:=false
+
+Notes:
+- Typo in: /root/orin/ros2_zed_ws/install/zed_wrapper/share/zed_wrapper/config/zed2i.yaml -> accidental new line in comment
+- RTABMap crashes when it starts logging:
+    [rtabmap-4] [WARN] [1733587322.916407493] [rtabmap.rtabmap]: rtabmap: Did not receive data since 5 seconds! Make sure the input topics are published ("$ ros2 topic hz my_topic") and the timestamps in their header are set. If topics are coming from different computers, make sure the clocks of the computers are synchronized ("ntpdate"). If topics are not published at the same rate, you could increase "sync_queue_size" and/or "topic_queue_size" parameters (current=100 and 100 respectively).
+    [rtabmap-4] rtabmap subscribed to (approx sync):
+    [rtabmap-4]    /rtabmap/odom \
+    [rtabmap-4]    /zed/zed_node/rgb/image_rect_color_relay \
+    [rtabmap-4]    /zed/zed_node/depth/depth_registered_relay \
+    [rtabmap-4]    /zed/zed_node/rgb/camera_info \
+    [rtabmap-4]    /rtabmap/odom_info
+
+Notes to make Rviz run in WSL2:
+- set networkMode=mirrored in .wslconfig in Windows to allow Jetson to ping WSL2
+- set ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET in WSL2 instead of LOCALHOST
+- STILL DOESN'T WORK
+
+
+
+[rgbd_odometry-3] [ERROR] [1733595406.857007156] [rtabmap.rgbd_odometry]: Overwriting previous data! Make sure IMU is published faster than data rate. (last image stamp buffered=1733595406.739301 and new one is 1733595406.772200, last imu stamp received=1733595406.634660)
+[rgbd_odometry-3] [INFO] [1733595407.006126631] [rtabmap.rgbd_odometry]: Odom: quality=77, std dev=0.010012m|0.021909rad, update time=0.147024s
+[rgbd_odometry-3] [ERROR] [1733595407.011608215] [rtabmap.rgbd_odometry]: Overwriting previous data! Make sure IMU is published faster than data rate. (last image stamp buffered=1733595406.805926 and new one is 1733595406.839388, last imu stamp received=1733595406.788265)
+[rgbd_odometry-3] [ERROR] [1733595407.012241916] [rtabmap.rgbd_odometry]: Overwriting previous data! Make sure IMU is published faster than data rate. (last image stamp buffered=1733595406.839388 and new one is 1733595406.872586, last imu stamp received=1733595406.793220)
+[rgbd_odometry-3] [ERROR] [1733595407.012945922] [rtabmap.rgbd_odometry]: Overwriting previous data! Make sure IMU is published faster than data rate. (last image stamp buffered=1733595406.872586 and new one is 1733595406.905818, last imu stamp received=1733595406.798176)
+
+
+[rgbd_odometry-3] [ERROR] [1733595543.255788373] [rtabmap.rgbd_odometry]: Overwriting previous data! Make sure IMU is published faster than data rate. (last image stamp buffered=1733595543.159506 and new one is 1733595543.192730, last imu stamp received=1733595543.137868)
+
+
+ackerman stearing fix
+
+        if 0.05 < abs(msg.linear.x) < 0.35:
+            linear_vel = 0.35 if msg.linear.x > 0 else -0.35
+        else:
+            linear_vel = msg.linear.x
+
+        if 0.05 < abs(msg.angular.z) < 0.25:
+            angular_vel = 0.25 if msg.angular.z > 0 else -0.25
+        else:
+            angular_vel = msg.angular.z
+
+
+        if -0.055 < (msg.linear.x) < -0.045 and 0.05 > abs(msg.angular.z):
+            linear_vel = 0.55 if msg.linear.x > 0 else -0.55
+        else:
+            linear_vel = msg.linear.x
