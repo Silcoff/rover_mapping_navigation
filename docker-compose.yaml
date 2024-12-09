@@ -1,0 +1,37 @@
+services:
+  camera:  # Replace with the desired service name
+    build: 
+      context: ./rtabmap  # Use the current directory
+      dockerfile: Dockerfile-rtabmap  # Use the Dockerfile in the current directory
+    image: "rtabmap"
+    privileged: true  # Enable privileged mode
+    runtime: "nvidia"  # Set the runtime to NVIDIA
+    volumes:
+      - "/lib/modules/5.15.148-tegra:/lib/modules/5.15.148-tegra"
+    network_mode: "host"
+    environment:  # Add any environment variables here
+      - ROS_DOMAIN_ID=1
+    # command: bash -c "source /root/.bashrc && camera"
+    entrypoint: /root/orin/ros_ws/entrypoint-camera.sh # Set the entrypoint
+    stdin_open: true
+    # tty: true
+
+  rtabmap:
+    build: 
+      context: ./rtabmap
+      dockerfile: Dockerfile-rtabmap
+      # network: host
+    image: "rtabmap"
+    depends_on:
+      - camera
+    privileged: true
+    runtime: "nvidia"
+    volumes:
+      - "/lib/modules/5.15.148-tegra:/lib/modules/5.15.148-tegra"
+    network_mode: "host"
+    environment:
+      - ROS_DOMAIN_ID=1
+    entrypoint: /root/orin/ros_ws/entrypoint-rtabmap.sh
+    stdin_open: true
+    # tty: true
+    
